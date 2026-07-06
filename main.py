@@ -1,12 +1,10 @@
 import discord
 from discord.ext import commands
-from discord import app_commands
-from config import OWNER_ID
 import asyncio
 import random
 import json
 
-from config import TOKEN, OWNER_ID
+from config import TOKEN, OWNER_ID, EMBED_COLOR
 
 intents = discord.Intents.default()
 
@@ -15,67 +13,62 @@ bot = commands.Bot(
     intents=intents
 )
 
-types_nen = {
-    "💪 Renforcement": "Vous excellez dans le renforcement de votre corps et de vos capacités physiques.",
-    "⚡ Émission": "Vous pouvez projeter votre aura à distance.",
-    "💎 Transmutation": "Votre aura peut reproduire les propriétés d'autres matières.",
-    "🎭 Matérialisation": "Vous pouvez matérialiser des objets grâce à votre Nen.",
-    "🎮 Manipulation": "Vous pouvez contrôler des êtres vivants ou des objets.",
-    "👁️ Spécialisation": "Votre Nen est unique et extrêmement rare."
+NEN_TYPES = {
+    "💪 Enhancement": "You excel at strengthening your body and physical abilities.",
+    "⚡ Emission": "You can project your aura over long distances.",
+    "💎 Transmutation": "Your aura can imitate the properties of other substances.",
+    "🎭 Conjuration": "You can materialize objects using your aura.",
+    "🎮 Manipulation": "You can control living beings or objects with your aura.",
+    "👁️ Specialization": "Your Nen is unique and extremely rare."
 }
 
 
-def charger_donnees():
+def load_data():
     try:
-        with open("data.json", "r", encoding="utf-8") as f:
-            return json.load(f)
+        with open("data.json", "r", encoding="utf-8") as file:
+            return json.load(file)
     except:
         return {}
 
 
-def sauvegarder_donnees(data):
-    with open("data.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+def save_data(data):
+    with open("data.json", "w", encoding="utf-8") as file:
+        json.dump(data, file, indent=4)
 
 
 @bot.event
 async def on_ready():
     synced = await bot.tree.sync()
-    print(f"{bot.user} est connecté !")
-    print(f"{len(synced)} commande(s) synchronisée(s).")
+    print(f"{bot.user} is online!")
+    print(f"{len(synced)} slash command(s) synced.")
 
 
-@bot.tree.command(name="ping", description="Vérifie si le bot fonctionne")
+@bot.tree.command(name="ping", description="Check if the bot is online.")
 async def ping(interaction: discord.Interaction):
-    await interaction.response.send_message("🏓 Pong !")
+    await interaction.response.send_message("🏓 Pong!")
 
 
-@bot.tree.command(name="eveil", description="Éveille votre Nen")
+@bot.tree.command(name="eveil", description="Awaken your Nen.")
 async def eveil(interaction: discord.Interaction):
 
-    data = charger_donnees()
+    data = load_data()
     user_id = str(interaction.user.id)
 
     if user_id in data:
         await interaction.response.send_message(
-            "❌ Vous avez déjà éveillé votre Nen.",
+            "❌ You have already awakened your Nen.",
             ephemeral=True
         )
         return
 
-    await interaction.response.send_message("🌊 Début de l'éveil du Nen...")
+    await interaction.response.send_message(
+        "🌊 Awakening your Nen..."
+    )
 
     await asyncio.sleep(2)
 
     nen = random.choices(
-        population=[
-            "💪 Renforcement",
-            "⚡ Émission",
-            "💎 Transmutation",
-            "🎭 Matérialisation",
-            "🎮 Manipulation",
-            "👁️ Spécialisation"
-        ],
+        population=list(NEN_TYPES.keys()),
         weights=[23, 20, 20, 18, 17, 2],
         k=1
     )[0]
@@ -84,16 +77,16 @@ async def eveil(interaction: discord.Interaction):
         "nen": nen
     }
 
-    sauvegarder_donnees(data)
+    save_data(data)
 
     embed = discord.Embed(
-        title="✨ Éveil du Nen ✨",
-        description=f"Votre catégorie est **{nen}**\n\n{types_nen[nen]}",
-        color=0x6B46C1
+        title="✨ Nen Awakened ✨",
+        description=f"**{nen}**\n\n{NEN_TYPES[nen]}",
+        color=EMBED_COLOR
     )
 
     embed.set_footer(
-        text="Le véritable entraînement commence maintenant..."
+        text="Your journey has just begun..."
     )
 
     await interaction.edit_original_response(
@@ -104,23 +97,38 @@ async def eveil(interaction: discord.Interaction):
 
 @bot.tree.command(
     name="reseteveil",
-    description="Réinitialise l'éveil d'un joueur."
+    description="Reset a player's Nen awakening."
 )
 async def reseteveil(
     interaction: discord.Interaction,
-    membre: discord.Member
+    member: discord.Member
 ):
-    if interaction.user.id != IDENTIFIANT_PROPRIÉTAIRE:
+
+    if interaction.user.id != OWNER_ID:
+        await interaction.response.send_message(
+            "❌ You are not allowed to use this command.",
+            ephemeral=True
+        )
+        return
+
+    data = load_data()
+
+    user_id = str(member.id)
+
+    if user_id not in data:
+        await interaction.response.send_message(
+            "❌ This player has not awakened their Nen yet.",
+            ephemeral=True
+        )
+        return
+
+    del data[user_id]
+
+    save_data(data)
+
     await interaction.response.send_message(
-        "❌ Vous n'êtes pas autorisé à utiliser cette commande.",
-        ephemeral=True
-    )
-    return
-    ...
-    await interaction.response.send_message(
-        f"✅ L'éveil de **{membre.display_name}** a été réinitialisé."
+        f"✅ {member.display_name}'s Nen awakening has been reset."
     )
 
-bot.run(TOKEN)
 
 bot.run(TOKEN)
