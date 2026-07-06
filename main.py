@@ -110,6 +110,12 @@ async def reseteveil(
     interaction: discord.Interaction,
     membre: discord.Member
 ):
+    if interaction.user.id != IDENTIFIANT_PROPRIÉTAIRE:
+    await interaction.response.send_message(
+        "❌ Vous n'êtes pas autorisé à utiliser cette commande.",
+        ephemeral=True
+    )
+    return
     ...
     await interaction.response.send_message(
         f"✅ L'éveil de **{membre.display_name}** a été réinitialisé."
