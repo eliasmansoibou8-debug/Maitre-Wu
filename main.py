@@ -1,11 +1,12 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from config import OWNER_ID
 import asyncio
 import random
 import json
 
-from config import TOKEN
+from config import TOKEN, OWNER_ID
 
 intents = discord.Intents.default()
 
@@ -100,6 +101,19 @@ async def eveil(interaction: discord.Interaction):
         embed=embed
     )
 
+
+@bot.tree.command(
+    name="reseteveil",
+    description="Réinitialise l'éveil d'un joueur."
+)
+async def reseteveil(
+    interaction: discord.Interaction,
+    membre: discord.Member
+):
+    ...
+    await interaction.response.send_message(
+        f"✅ L'éveil de **{membre.display_name}** a été réinitialisé."
+    )
 
 bot.run(TOKEN)
 
